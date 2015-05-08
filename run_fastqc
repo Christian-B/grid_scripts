@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# -- SGE options (whose lines must begin with #$)
+
+#$ -S /bin/bash       # Our jobscript is written for the bash shell
+#$ -V                 # Inherit environment settings (e.g., from loaded modulefiles)
+#$ -N run_fastqc      # Add a name
+#$ -cwd               # Run the job in the current directory
+
+# -- the commands to be executed (programs to be run) on a compute node:
+
+module load apps/fastqc/0.11.2/noarch
+echo module apps/fastqc/0.11.2/noarch loaded
+
+#codestart
+
+inputpath=$1
+outputdir=$2
+
+echo fastqc -outdir=$outputdir $inputpath
+fastqc -outdir=$outputdir $inputpath
