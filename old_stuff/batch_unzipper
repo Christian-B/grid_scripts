@@ -1,0 +1,19 @@
+#Simple code to unzip a number of files as found in files.txt
+#This was to test batch and not as a recommended way of operating
+#It probably make little sense to run this as a batch.
+
+#!/bin/bash
+
+# -- SGE options (whose lines must begin with #$)
+
+#$ -S /bin/bash       # Our jobscript is written for the bash shell
+#$ -V                 # Inherit environment settings (e.g., from loaded modulefiles)
+#$ -N unzipper        # Add a name
+#$ -cwd               # Run the job in the current directory
+
+#$ -t 1-10
+
+INFILE=`awk "NR==$SGE_TASK_ID" files.txt`
+
+unzip -u $INFILE
+

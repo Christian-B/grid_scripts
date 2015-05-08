@@ -1,0 +1,35 @@
+#Test code to test batch.
+#It of course makes zero sense to actually use a batch to do this
+
+#!/bin/bash
+
+# -- SGE options (whose lines must begin with #$)
+
+#$ -S /bin/bash       # Our jobscript is written for the bash shell
+#$ -V                 # Inherit environment settings (e.g., from loaded modulefiles)
+#$ -cwd               # Run the job in the current directory
+
+#$ -t 1-14
+INPUT_PATH=(
+/mnt/mr01-home01/mbaxecb2/code/file_lister.py
+/mnt/mr01-home01/mbaxecb2/code/install_fastqc
+/mnt/mr01-home01/mbaxecb2/code/batch_unzipper
+/mnt/mr01-home01/mbaxecb2/code/python_version
+/mnt/mr01-home01/mbaxecb2/code/run_fastqc
+/mnt/mr01-home01/mbaxecb2/code/old_stuff
+/mnt/mr01-home01/mbaxecb2/code/echo_test
+/mnt/mr01-home01/mbaxecb2/code/echo_test_batch
+/mnt/mr01-home01/mbaxecb2/code/batch_maker.py
+/mnt/mr01-home01/mbaxecb2/code/parameter_echo
+/mnt/mr01-home01/mbaxecb2/code/echo_test_hardcode_batch
+/mnt/mr01-home01/mbaxecb2/code/batch_maker.py~
+/mnt/mr01-home01/mbaxecb2/code/batch_maker
+/mnt/mr01-home01/mbaxecb2/code/python_version~
+)
+
+# -- the commands to be executed (programs to be run) on a compute node:
+
+INDEX=$((SGE_TASK_ID-1))
+inputpath=${INPUT_PATH[$INDEX]}
+
+echo $inputpath

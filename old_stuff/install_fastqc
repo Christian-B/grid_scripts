@@ -1,0 +1,39 @@
+#Way to install fastqc before running
+#Not recommended on the Manchester grid where fastqc can be loaded using
+#module load apps/fastqc/0.11.2/noarch
+
+#!/bin/bash
+
+# -- SGE options (whose lines must begin with #$)
+
+#$ -S /bin/bash       # Our jobscript is written for the bash shell
+#$ -V                 # Inherit environment settings (e.g., from loaded modulefiles)
+#$ -N run_fastqc      # Add a name
+#$ -cwd               # Run the job in the current directory
+
+#Install FastQV if required
+if [ -d "FastQC" ]; then 
+    echo "FastQC directory exists. Assuming Installed."
+else
+    #Get zip if required
+    if [ -f "fastqc_v0.11.3.zip" ]; then
+       echo "zip already exist"
+    else 
+       wget http://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.11.3.zip
+       echo "ran wget"
+    fi
+    unzip fastqc_v0.11.3.zip
+    echo "Ran unzip"
+fi
+
+#Reset permission to be sure
+chmod 775 FastQC/fastqc
+
+directory="/mnt/fls01-data01/shared/bcf/leo_temp/"
+
+for f in $directory*.fastq.gz; do
+    if [ -f $f ]; then
+        echo "file" $f; 
+	./FastQC/fastqc -outdir="/$HOME/scratch/fastqc" $f
+    fi   done 
+#./FastQC/fastqc -outdir="/$HOME/scratch/fastqc" "/mnt/fls01-data01/shared/bcf/leo_temp/GR1_HY_Trex1_ACAGTG_R1.fastq.gz" "GR1_HY_Trex1_ACAGTG_R1.fastq.txt"

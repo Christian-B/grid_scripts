@@ -1,0 +1,17 @@
+#NOTE: This test failed as you can not do qsub from a run node
+
+#!/bin/bash
+
+# -- SGE options (whose lines must begin with #$)
+
+#$ -S /bin/bash       # Our jobscript is written for the bash shell
+#$ -V                 # Inherit environment settings (e.g., from loaded modulefiles)
+#$ -cwd               # Run the job in the current directory
+
+#codestart
+
+module load apps/python/2.7.5/gcc-4.4.7
+
+inputpath=$1
+
+python ~/code/batch_maker.py $inputpath
