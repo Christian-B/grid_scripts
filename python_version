@@ -1,0 +1,7 @@
+!/bin/bash
+
+module load apps/python/2.7.5/gcc-4.4.7
+python --version
+
+#WARNING running this is a sperate bash only effects that bash. 
+#Module is not visible outside of that bash
