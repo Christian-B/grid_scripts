@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# -- SGE options (whose lines must begin with #$)
+
+#$ -S /bin/bash       # Our jobscript is written for the bash shell
+#$ -V                 # Inherit environment settings (e.g., from loaded modulefiles)
+#$ -cwd               # Run the job in the current directory
+
+module load apps/trimmomatic/0.32/noarch  
+
+trimmomatic PE -phred33 -threads 2 \
+/mnt/fls01-data01/shared/bcf/leo_temp/GR1_HY_Trex1_ACAGTG_R1.fastq.gz \
+/mnt/fls01-data01/shared/bcf/leo_temp/GR1_HY_Trex1_ACAGTG_R2.fastq.gz \
+~/scratch/GR1_HY_Trex1_ACAGTG_R1_trimmed.fastq.gz ~/scratch/GR1_HY_Trex1_ACAGTG_R1_unpaired.fastq.gz \
+~/scratch/GR1_HY_Trex1_ACAGTG_R2_trimmed.fastq.gz ~/scratch/GR1_HY_Trex1_ACAGTG_R2_unpaired.fastq.gz \
+ILLUMINACLIP:/opt/gridware/pkg/apps/trimmomatic/0.32/noarch/share/adapters/TruSeq3-PE-2.fa:2:30:10 \
+SLIDINGWINDOW:4:20 MINLEN:36 
