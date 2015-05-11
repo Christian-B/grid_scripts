@@ -8,10 +8,32 @@
 
 module load apps/trimmomatic/0.32/noarch  
 
+#codestart
+
+inputpath=$1
+secondpath=$2
+outputdir=$3
+
+file_name=${inputpath##*/}
+dotindex=`expr index "$file_name" '.'` 
+base=${file_name:0:$dotindex}
+extension=${file_name:$dotindex}
+trimmed1=${outputdir}/${base}_trimmed.${extension}
+unpaired1=${outputdir}/${base}_unpaired.${extension}
+
+file_name=${secondpath##*/}
+dotindex=`expr index "$file_name" '.'` 
+base=${file_name:0:$dotindex}
+extension=${file_name:$dotindex}
+trimmed2=${outputdir}/${base}_trimmed.${extension}
+unpaired2=${outputdir}/${base}_unpaired.${extension}
+
+echo trimmomatic PE -phred33 -threads 2 \
+$inputpath $secondpath $trimmed1 $unpaired1 $trimmed2 $unpaired2 \
+ILLUMINACLIP:/opt/gridware/pkg/apps/trimmomatic/0.32/noarch/share/adapters/TruSeq3-PE-2.fa:2:30:10 \
+SLIDINGWINDOW:4:20 MINLEN:36 
+
 trimmomatic PE -phred33 -threads 2 \
-/mnt/fls01-data01/shared/bcf/leo_temp/GR1_HY_Trex1_ACAGTG_R1.fastq.gz \
-/mnt/fls01-data01/shared/bcf/leo_temp/GR1_HY_Trex1_ACAGTG_R2.fastq.gz \
-~/scratch/GR1_HY_Trex1_ACAGTG_R1_trimmed.fastq.gz ~/scratch/GR1_HY_Trex1_ACAGTG_R1_unpaired.fastq.gz \
-~/scratch/GR1_HY_Trex1_ACAGTG_R2_trimmed.fastq.gz ~/scratch/GR1_HY_Trex1_ACAGTG_R2_unpaired.fastq.gz \
+$inputpath $secondpath $trimmed1 $unpaired1 $trimmed2 $unpaired2 \
 ILLUMINACLIP:/opt/gridware/pkg/apps/trimmomatic/0.32/noarch/share/adapters/TruSeq3-PE-2.fa:2:30:10 \
 SLIDINGWINDOW:4:20 MINLEN:36 
