@@ -5,8 +5,11 @@ import subprocess
 import sys
 
 def find_files(directory, extensions):
-    print "directory",directory
-    print "extensions",extensions
+    #print "directory",directory
+    #print "extensions",extensions
+    if directory.startswith("~"):
+        home = os.path.expanduser("~")
+        directory = home + "/" + directory[1:]
     if extensions:
         print "some"
         files = []
@@ -27,7 +30,7 @@ def all_files(directory):
         files.append(directory + "/" + filename)
     return files                
     
-def make_batch_bash(files, simple_bash, outputdir=os.getcwd()):
+def make_batch_bash(files, simple_bash,  paired_files=None, outputdir=os.getcwd()):
     batch_bash = simple_bash + "_batch"
     with open(simple_bash, "r") as simple_file:
         with open(batch_bash, "w") as batch_file:
@@ -38,19 +41,69 @@ def make_batch_bash(files, simple_bash, outputdir=os.getcwd()):
                     for file in files:
                         batch_file.write(file + "\n")
                     batch_file.write(")" + "\n")
+                    if paired_files:
+                        batch_file.write("SECOND_PATH=(\n")
+                        for file in paired_files:
+                            batch_file.write(file + "\n")
+                        batch_file.write(")" + "\n")
                 elif line.startswith("inputpath=$"):
                     batch_file.write("INDEX=$((SGE_TASK_ID-1))\n")
                     batch_file.write("inputpath=${INPUT_PATH[$INDEX]}\n")
                 elif line.startswith("outputdir=$"):
                     batch_file.write("outputdir=" + outputdir + "\n")                        
+                elif line.startswith("secondpath=$"):
+                    batch_file.write("INDEX=$((SGE_TASK_ID-1))\n")
+                    batch_file.write("secondpath=${SECOND_PATH[$INDEX]}\n")
                 else:
                     batch_file.write(line)
     return batch_bash                
 
-def extend_and_submit(script, extensions=None, directory=os.getcwd()):
+def pair_finder(files, left_end="R1", right_end="R2"):
+    extensions = []
+    file_names = []
+    for full_file in files:
+        slash_index = full_file.rfind("/")
+        dot_index = full_file.find(".", slash_index)
+        if dot_index == -1:
+            dot_index = len(full_file)            
+        extension = full_file[dot_index+1:]
+        file_name = full_file[slash_index+1:dot_index]
+        #print slash_index, dot_index, extension, file_name
+        extensions.append(extension)
+        file_names.append(file_name)
+    #print extensions
+    #print file_names  
+    pairs = []
+    for left in range(0,len(files)):
+        if file_names[left].endswith(left_end):
+            left_front = file_names[left][:-(len(left_end))]
+            for right in range(0,len(files)):
+                if file_names[right].endswith(right_end):
+                    right_front = file_names[right][:-(len(right_end))]
+                    if left_front == right_front:
+                        pairs.append((files[left],files[right]))
+                        #pairs.append((left,right))
+    #print pairs
+    return pairs                
+                
+def extend_and_submit(script, 
+                      extensions=None, 
+                      directory=os.getcwd(), 
+                      outputdir=os.getcwd(),
+                      pairends=None):
     files = find_files(directory, extensions)
     print files
-    batch_bash = make_batch_bash(files,script)
+    if pairends:
+        print "pairends",pairends
+        ends= pairends.split(",")
+        pairs = pair_finder(files, left_end=ends[0], right_end=ends[1])
+        left = [x[0] for x in pairs]
+        right = [x[1] for x in pairs]
+        print left
+        print right
+        batch_bash = make_batch_bash(left, script, paired_files=right, outputdir=outputdir)
+    else:
+        batch_bash = make_batch_bash(files, script, outputdir=outputdir)        
     command_line = "qsub "+ batch_bash
     #command_line = "cat "+ batch_bash
     args = shlex.split(command_line)
@@ -71,12 +124,22 @@ if __name__ == '__main__':
                         help="Directory to write output to. "
                         "Default is current directory", 
                         default=os.getcwd())
+    parser.add_argument("-p","--pairends", 
+                        help="The Unique part of the names of file pairs. "
+                        "This will be two values seperated by a comma but without spacing."
+                        "For example 'R1,R2'", 
+                        default=None)
     parser.add_argument("script", 
                         help="The script to extend and then submit to qsub. "
                         "Note sumbitted script will appended with '_batch '"
-                        "This will overwrite existing file")
+                        "This will overwrite existing file",
+                        default=None)
     args = parser.parse_args()                        
                         
     print args          
-    extend_and_submit(args.script, extensions=args.extension, directory=args.directory)
+    extend_and_submit(args.script, 
+                      extensions=args.extension, 
+                      directory=args.directory, 
+                      outputdir=args.outputdir,
+                      pairends=args.pairends)
     
