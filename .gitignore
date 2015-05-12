@@ -4,5 +4,6 @@
 #Lock files
 *~lock*
 
-
+#Ignore btach files created
+*_batch
 
