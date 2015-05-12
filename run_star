@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# -- SGE options (whose lines must begin with #$)
+
+#$ -S /bin/bash       # Our jobscript is written for the bash shell
+#$ -V                 # Inherit environment settings (e.g., from loaded modulefiles)
+#$ -cwd               # Run the job in the current directory
+
+module load apps/gcc/rnastar/2.4.0 
+echo module apps/gcc/rnastar/2.4.0 loaded
+
+#codestart
+
+inputpath=$1
+outputdir=$2
+
+if [[ $inputpath == *.gz ]]; then
+    echo found ending
+    read_files_command="--readFilesCommand zcat"
+else    
+    read_files_command=""
+fi
+
+echo $inputpath
+echo read_files_command=$read_files_command
+
+echo SB10_ICMS_STAR
+
+echo Setting up run
+
+run_command="STAR --runMode alignReads \
+    --runThreadN 11 \
+    --genomeLoad LoadAndKeep \
+    --outFilterMultimapNmax 1 \ 
+    --outFilterMismatchNmax 0 \ 
+    --genomeDir /mnt/fls01-data01/shared/bcf/ngsdata/genomeIndexes/hg19_mm10_STAR/STAR_INDEX \
+    --sjdbGTFfile /mnt/fls01-data01/shared/bcf/ngsdata/genomeIndexes/hg19_mm10_STAR/mm10hg19.gtf \
+    --readFilesIn $inputpath $read_files_command \
+    --outSAMstrandField intronMotif \
+    --outFileNamePrefix $outputdir"
+
+echo run settup 
+
+echo $run_command
+
+$run_command
+
+
