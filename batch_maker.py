@@ -5,13 +5,10 @@ import subprocess
 import sys
 
 def find_files(directory, extensions):
-    #print "directory",directory
-    #print "extensions",extensions
     if directory.startswith("~"):
         home = os.path.expanduser("~")
         directory = home + "/" + directory[1:]
     if extensions:
-        print "some"
         files = []
         for filename in os.listdir(directory):
             index = filename.find(".")
@@ -26,8 +23,7 @@ def find_files(directory, extensions):
 def all_files(directory):
     files = []
     for filename in os.listdir(directory):
-        print filename
-        files.append(directory + "/" + filename)
+Q        files.append(directory + "/" + filename)
     return files                
     
 def make_batch_bash(files, simple_bash,  paired_files=None, outputdir=os.getcwd()):
@@ -68,11 +64,8 @@ def pair_finder(files, left_end="R1", right_end="R2"):
             dot_index = len(full_file)            
         extension = full_file[dot_index+1:]
         file_name = full_file[slash_index+1:dot_index]
-        #print slash_index, dot_index, extension, file_name
         extensions.append(extension)
         file_names.append(file_name)
-    #print extensions
-    #print file_names  
     pairs = []
     for left in range(0,len(files)):
         if file_names[left].endswith(left_end):
@@ -82,8 +75,6 @@ def pair_finder(files, left_end="R1", right_end="R2"):
                     right_front = file_names[right][:-(len(right_end))]
                     if left_front == right_front:
                         pairs.append((files[left],files[right]))
-                        #pairs.append((left,right))
-    #print pairs
     return pairs                
                 
 def extend_and_submit(script, 
@@ -92,15 +83,11 @@ def extend_and_submit(script,
                       outputdir=os.getcwd(),
                       pairends=None):
     files = find_files(directory, extensions)
-    print files
     if pairends:
-        print "pairends",pairends
         ends= pairends.split(",")
         pairs = pair_finder(files, left_end=ends[0], right_end=ends[1])
         left = [x[0] for x in pairs]
         right = [x[1] for x in pairs]
-        print left
-        print right
         batch_bash = make_batch_bash(left, script, paired_files=right, outputdir=outputdir)
     else:
         batch_bash = make_batch_bash(files, script, outputdir=outputdir)        
