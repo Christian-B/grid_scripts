@@ -11,23 +11,49 @@ echo module apps/gcc/rnastar/2.4.0 loaded
 
 #codestart
 
+#These are used if run in none batch mode
+if [[ $# -eq 1 ]]; then 
+    path2=""
+    outputdirectory=$PWD
+elif [[ $# -eq 2 ]]; then 
+    path2=""
+    outputdirectory=$2
+else
+    path2=$2
+    outputdirectory=$3
+fi
+
+#Set by above or replaced in batch mode
 inputpath=$1
-outputdir=$2
+secondpath=$path2
+outputdir=$outputdirectory
 
 if [[ $inputpath == *.gz ]]; then
-    echo found ending
     read_files_command="--readFilesCommand zcat"
 else    
     read_files_command=""
 fi
 
-echo $inputpath
-echo read_files_command=$read_files_command
+file_name=${inputpath##*/}
+dotindex=`expr index "$file_name" '.'` 
+base=${file_name:0:$dotindex-1}
 
-echo SB10_ICMS_STAR
+full_outputdir=$outputdir/$base/
 
-echo Setting up run
+if [[ -d "$full_outputdir" ]]; then
+    echo overwritting $full_outputdir
+else
+    mkdir $full_outputdir
+    echo writing to $full_outputdir
+fi
 
+#Delete all but required Option Default is SAM
+#outputType="--outSAMtype BAM Unsorted SortedByCoordinate"
+#outputType="--outSAMtype BAM SortedByCoordinate"
+#outputType="--outSAMtype BAM Unsorted"
+outputType="--outSAMtype SAM" 
+
+    
 run_command="STAR --runMode alignReads \
     --runThreadN 11 \
     --genomeLoad LoadAndKeep \
@@ -35,13 +61,12 @@ run_command="STAR --runMode alignReads \
     --outFilterMismatchNmax 0 \ 
     --genomeDir /mnt/fls01-data01/shared/bcf/ngsdata/genomeIndexes/hg19_mm10_STAR/STAR_INDEX \
     --sjdbGTFfile /mnt/fls01-data01/shared/bcf/ngsdata/genomeIndexes/hg19_mm10_STAR/mm10hg19.gtf \
-    --readFilesIn $inputpath $read_files_command \
+    --readFilesIn $inputpath $secondpath $read_files_command \
     --outSAMstrandField intronMotif \
-    --outFileNamePrefix $outputdir"
+    $outputType \
+    --outFileNamePrefix $full_outputdir"
 
-echo run settup 
-
-echo $run_command
+echo running $run_command
 
 $run_command
 
