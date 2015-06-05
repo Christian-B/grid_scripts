@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# -- SGE options (whose lines must begin with #$)
+
+#$ -S /bin/bash       # Our jobscript is written for the bash shell
+#$ -V                 # Inherit environment settings (e.g., from loaded modulefiles)
+#$ -N fastqsummary  # Add a name
+
+#$ -cwd               # Run the job in the current directory
+
+module load apps/htseq/0.6.1p1/gcc-4.4.7+python-2.7.5+numpy-1.7.1
+
+#codestart
+
+inputpath=$1
+outputdir=$2
+
+echo python fastqsummary.py -d$inputpath -o$outputdir
+python fastqsummary.py -d$inputpath -o$outputdir
