@@ -71,7 +71,27 @@ If not file name is provided returns a handle wrapping standard out
 @contextlib.contextmanager
 def smart_open(filename=None):
     if filename and filename != '-':
-        fh = open(filename, 'w')
+        try:
+            fh = open(filename, 'w')
+        except IOError as e:
+            print >> sys.stderr, "error opening", filename
+            print "error opening", filename
+            print >> sys.stderr, "I/O error({0}): {1}".format(e.errno, e.strerror)
+            print "I/O error({0}): {1}".format(e.errno, e.strerror)
+            print >> sys.stderr, "Expected to find file at", os.path.abspath(filename)
+            print "Expected to find file at", os.path.abspath(filename)
+            if os.path.isdir(filename):
+                print >> sys.stderr, "expected a file but received a directory"
+                print "expected a file but received a directory" 
+            else:
+                directory = os.path.abspath(os.path.dirname(filename))
+                if os.path.isdir(filename):
+                    print >> sys.stderr, "Check the write permissions for", directory
+                    print "Check the write permissions for", directory
+                else:
+                    print >> sys.stderr, "directory", directory, "does not exists"    
+                    print "directory", directory, "does not exists"    
+            raise e        
     else:
         fh = sys.stdout
 
@@ -92,8 +112,12 @@ def demo_smart_open():
         f.write("not good\n")
     except:
         print "good"
-
-
+    try:    
+        with smart_open("notHereI_hope/nothere.txt") as bad:
+            f.write("oops")
+    except IOError as e:
+        print "good io error thrown"
+            
 if __name__ == '__main__':
     demo_find_files()
     demo_smart_open()
