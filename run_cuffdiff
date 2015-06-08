@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# -- SGE options (whose lines must begin with #$)
+
+#$ -S /bin/bash       # Our jobscript is written for the bash shell
+#$ -V                 # Inherit environment settings (e.g., from loaded modulefiles)
+#$ -N cuffdiff        # Add a namecd 
+
+#$ -cwd               # Run the job in the current directory
+
+module load apps/cufflinks/2.2.1/gcc-4.4.7+boost-1.49.0+samtools-0.1.19+eigen-3.0.5
+
+#codestart
+
+#WANRING ouputdir is first parameter here!
+outputdir=$1
+transcriptspath=$2
+#Remaining inputs are sam files.
+#There must be at least 2 space seperated!
+#Each can contain replicates comma seperated
+#WARNING the sam in the input files MUST BE SORTED!
+
+samparameter=""
+
+# store arguments in a special array 
+args=("$@") 
+# get number of elements 
+ELEMENTS=${#args[@]}
+ 
+echo $ELEMENTS
+ 
+# echo each element in array  
+# for loop 
+for (( i=2;i<$ELEMENTS;i++)); do 
+    samparameter=${samparameter}" "${args[${i}]} 
+done
+
+echo cuffdiff -o$outputdir $transcriptspath $samparameter
+cuffdiff -o$outputdir $transcriptspath $samparameter
