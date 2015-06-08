@@ -1,0 +1,64 @@
+#!/bin/bash
+
+# -- SGE options (whose lines must begin with #$)
+
+#$ -S /bin/bash       # Our jobscript is written for the bash shell
+#$ -V                 # Inherit environment settings (e.g., from loaded modulefiles)
+#$ -N samSort         # Add a name
+
+#$ -cwd               # Run the job in the current directory
+
+module load apps/samtools/0.1.19/gcc-4.4.7
+
+#codestart
+
+inputpath=$1
+
+#If there is a second parameter use that as the outout directory
+if [[ $# -eq 1 ]]; then 
+    outputdir=$(dirname "$inputpath")/
+else
+    outputdir=$2/
+fi
+
+echo using samtools to sort $inputpath to $outputdir
+
+filename=$(basename "$inputpath")
+original_sam=false
+
+if [[ "$inputpath" == *.sam ]]
+then
+    root=${outputdir}${filename:0:${#filename}-4}
+    original_sam=true
+    unsorted_bam=${root}.bam
+elif [[ "$inputpath" == *.sam.gz ]]
+then
+    root=${outputdir}${filename:0:${#filename}-7}
+    original_sam=true
+    unsorted_bam=${root}.bam
+elif [[ "$inputpath" == *.bam ]]
+then
+    root=${outputdir}${filename:0:${#filename}-4}
+    original_sam=false
+    unsorted_bam=$inputpath
+else
+    echo "unexpected file ending in " $inputpath
+    exit 1
+fi
+
+if [[ $original_sam == true ]]   
+then
+    echo samtools view -bS -o$unsorted_bam $inputpath
+    samtools view -bS -o$unsorted_bam $inputpath
+else
+    echo "Already bam file"    
+fi 
+   
+echo samtools sort $unsorted_bam ${root}_sorted
+samtools sort $unsorted_bam ${root}_sorted
+
+echo samtools view -o${root}_sorted.sam ${root}_sorted.bam
+samtools view -o${root}_sorted.sam ${root}_sorted.bam
+
+
+
