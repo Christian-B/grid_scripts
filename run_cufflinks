@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# -- SGE options (whose lines must begin with #$)
+
+#$ -S /bin/bash       # Our jobscript is written for the bash shell
+#$ -V                 # Inherit environment settings (e.g., from loaded modulefiles)
+#$ -N cufflinks       # Add a namecd 
+
+#$ -cwd               # Run the job in the current directory
+
+module load apps/cufflinks/2.2.1/gcc-4.4.7+boost-1.49.0+samtools-0.1.19+eigen-3.0.5
+
+#codestart
+
+inputpath=$1
+outputdir=$2
+
+#WARNING the sam in the input file MUST BE SORTED!
+
+echo cufflinks -o$outputdir $inputpath 
+cufflinks -o$outputdir $inputpath 
