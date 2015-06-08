@@ -4,6 +4,9 @@
 #Lock files
 *~lock*
 
-#Ignore btach files created
+#batch files created
 *_batch
+
+#Pythion compiled code
+*.pyc
 
