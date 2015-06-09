@@ -48,8 +48,8 @@ fi
 
 if [[ $original_sam == true ]]   
 then
-    echo samtools view -bS -o$unsorted_bam $inputpath
-    samtools view -bS -o$unsorted_bam $inputpath
+    echo samtools view -hbS -o$unsorted_bam $inputpath
+    samtools view -bS -ho$unsorted_bam $inputpath
 else
     echo "Already bam file"    
 fi 
@@ -57,8 +57,8 @@ fi
 echo samtools sort $unsorted_bam ${root}_sorted
 samtools sort $unsorted_bam ${root}_sorted
 
-echo samtools view -o${root}_sorted.sam ${root}_sorted.bam
-samtools view -o${root}_sorted.sam ${root}_sorted.bam
+echo samtools view -ho${root}_sorted.sam ${root}_sorted.bam
+samtools view -ho${root}_sorted.sam ${root}_sorted.bam
 
 
 
