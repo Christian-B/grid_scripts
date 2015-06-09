@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# -- SGE options (whose lines must begin with #$)
+
+#$ -S /bin/bash       # Our jobscript is written for the bash shell
+#$ -V                 # Inherit environment settings (e.g., from loaded modulefiles)
+#$ -N fastqhead       # Add a name
+
+#$ -cwd               # Run the job in the current directory
+
+module load apps/htseq/0.6.1p1/gcc-4.4.7+python-2.7.5+numpy-1.7.1
+
+#codestart
+
+#This needs a rework to use in batch mode
+inputpath=$1
+if [[ $# -eq 1 ]]; then 
+    outputfile=""
+else
+    outputfile=-o$2
+fi
+
+#To change qual_scal and -q"solexa" 
+#Like
+#python fastqhead.py -q"solexa" $outputfile $inputpath
+
+echo python fastqhead.py $outputfile $inputpath
+python fastqhead.py $outputfile $inputpath 
+
+#Note no know way of getting the headers via htseq

@@ -58,6 +58,56 @@ def demo_find_files():
     print "text and python"
     print find_files(os.getcwd(), extensions=["txt", ".py"])
 
+"""
+Creates a new file by inserting the extra into the old path.
+Splits the path into dirname, filename and extensions
+Returns outputdir + filename + extra + extensions + gzipbit
+
+Where dirname is everything up to the last "/" or "\\"
+filename is everything after the the last "/" or "\\" until the first "."
+extensions is everthing after the file name except a possible '.gz' end
+gzipbit depends on the setting of gzipped and is the original ends with '.gz'
+
+If outputdir is None dirname is used for outputdir
+IE the new file is in the same directory as the old one
+"""
+
+
+def create_new_file(path, extra, outputdir=None, gzipped=None):
+    slash_index = path.rfind("/")
+    if slash_index < 0:
+        #Try windows divisor
+        slash_index = path.rfind("\\")
+    if slash_index < 0:
+        #Ok no directory part
+        slash_index = 0
+    else:
+        #skip the slash. Will add back later just once
+        slash_index += 1    
+    dot_index = path.find(".",slash_index)      
+    if dot_index < 0:
+        #Ok no extension
+        dot_index = len(path)    
+    if path.lower().endswith(".gz"):
+        end_pos = len(path) -3
+        end_bit = ".gz"
+    else:
+        end_pos = len(path)
+        end_bit = ""
+    if gzipped is not None:
+        if gzipped:
+            end_bit = ".gz"
+        else:
+            end_bit = ""                    
+    if outputdir is None:    
+        result = path[:dot_index]
+    else:
+        if (outputdir.endswith("/") or outputdir.endswith("\\")):
+            #remove the slash will add back later just once
+            outputdir = outputdir[:-1]
+        result = outputdir + "/" + path[slash_index:dot_index]
+    result += extra + path[dot_index:end_pos] + end_bit
+    return result
 
 """
 Returns the handle of a file to write to.
@@ -117,7 +167,28 @@ def demo_smart_open():
             f.write("oops")
     except IOError as e:
         print "good io error thrown"
-            
+        
+        
+def demo_create_new_file():
+    #print create_new_file("test","_more")
+    #print create_new_file("test.txt","_more")
+    #print create_new_file("test.txt.gz","_more")
+    #print create_new_file("test.txt.gz","_more", gzipped=True)
+    #print create_new_file("test.txt.gz","_more", gzipped=False)
+    #print create_new_file("~/temp/demo/test","_more")
+    #print create_new_file("~/temp/demo/test.txt","_more")
+    #print create_new_file("~/temp/demo/test.txt.gz","_more")
+    print create_new_file("test","_more","../newfolder")
+    #print create_new_file("test.txt","_more","../newfolder")
+    #print create_new_file("test.txt","_more","../newfolder", gzipped=True)
+    #print create_new_file("test.txt","_more","../newfolder", gzipped=False)
+    #print create_new_file("test.txt.gz","_more","../newfolder")
+    #print create_new_file("~/temp/demo/test","_more","../newfolder")
+    #print create_new_file("~/temp/demo/test.txt","_more","../newfolder")
+    #print create_new_file("~/temp/demo/test.txt.gz","_more","../newfolder")
+   
+    
 if __name__ == '__main__':
     demo_find_files()
     demo_smart_open()
+    demo_create_new_file()
