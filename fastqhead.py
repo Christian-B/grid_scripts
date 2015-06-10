@@ -13,7 +13,6 @@ def head(path, sequences=100,  outputdir=None,
     new_path = brenninc_utils.create_new_file(path, extra, outputdir=outputdir,
                                               gzipped=False)
     fastq_iterator = HTSeq.FastqReader(path, qual_scale)
-    print dir(fastq_iterator)
     with open(new_path, 'w') as headFile:
         for sequence in itertools.islice( fastq_iterator, sequences):
             sequence.write_to_fastq_file(headFile)
@@ -22,7 +21,7 @@ def makehead(path, sequences=100, outputdir=None,
              qual_scale=_default_qual_scale):
      files =  brenninc_utils.find_files(path, ["fastq","fastq.gz"])
      for afile in files:
-        head(path=path, sequences=sequences, outputdir=outputdir,
+        head(path=afile, sequences=sequences, outputdir=outputdir,
              qual_scale=qual_scale)
      
             
