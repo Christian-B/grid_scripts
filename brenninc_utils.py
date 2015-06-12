@@ -83,13 +83,13 @@ def create_new_file(path, extra, outputdir=None, gzipped=None):
         slash_index = 0
     else:
         #skip the slash. Will add back later just once
-        slash_index += 1    
-    dot_index = path.find(".",slash_index)      
+        slash_index += 1
+    dot_index = path.find(".", slash_index)
     if dot_index < 0:
         #Ok no extension
-        dot_index = len(path)    
+        dot_index = len(path)
     if path.lower().endswith(".gz"):
-        end_pos = len(path) -3
+        end_pos = len(path) - 3
         end_bit = ".gz"
     else:
         end_pos = len(path)
@@ -98,8 +98,8 @@ def create_new_file(path, extra, outputdir=None, gzipped=None):
         if gzipped:
             end_bit = ".gz"
         else:
-            end_bit = ""                    
-    if outputdir is None:    
+            end_bit = ""
+    if outputdir is None:
         result = path[:dot_index]
     else:
         if (outputdir.endswith("/") or outputdir.endswith("\\")):
@@ -108,6 +108,16 @@ def create_new_file(path, extra, outputdir=None, gzipped=None):
         result = outputdir + "/" + path[slash_index:dot_index]
     result += extra + path[dot_index:end_pos] + end_bit
     return os.path.expanduser(result)
+
+"""
+Duplicate the message to standard out and standard error
+"""
+
+
+def error(message):
+    print >> sys.stderr, message
+    print message
+
 
 """
 Returns the handle of a file to write to.
@@ -124,24 +134,19 @@ def smart_open(filename=None):
         try:
             fh = open(filename, 'w')
         except IOError as e:
-            print >> sys.stderr, "error opening", filename
-            print "error opening", filename
-            print >> sys.stderr, "I/O error({0}): {1}".format(e.errno, e.strerror)
-            print "I/O error({0}): {1}".format(e.errno, e.strerror)
-            print >> sys.stderr, "Expected to find file at", os.path.abspath(filename)
-            print "Expected to find file at", os.path.abspath(filename)
+            error("error opening " + filename)
+            error("I/O error({0}): {1}".format(e.errno, e.strerror))
+            full = os.path.abspath(filename)
+            error("Expected to find file at " + full)
             if os.path.isdir(filename):
-                print >> sys.stderr, "expected a file but received a directory"
-                print "expected a file but received a directory" 
+                error("expected a file but received a directory")
             else:
                 directory = os.path.abspath(os.path.dirname(filename))
                 if os.path.isdir(filename):
-                    print >> sys.stderr, "Check the write permissions for", directory
-                    print "Check the write permissions for", directory
+                    error("Check the write permissions for " + directory)
                 else:
-                    print >> sys.stderr, "directory", directory, "does not exists"    
-                    print "directory", directory, "does not exists"    
-            raise e        
+                    error("directory " + directory + " does not exists")
+            raise e
     else:
         fh = sys.stdout
 
@@ -162,32 +167,17 @@ def demo_smart_open():
         f.write("not good\n")
     except:
         print "good"
-    try:    
+    try:
         with smart_open("notHereI_hope/nothere.txt") as bad:
-            f.write("oops")
-    except IOError as e:
+            bad.write("oops")
+    except IOError:
         print "good io error thrown"
-        
-        
+
+
 def demo_create_new_file():
-    #print create_new_file("test","_more")
-    #print create_new_file("test.txt","_more")
-    #print create_new_file("test.txt.gz","_more")
-    #print create_new_file("test.txt.gz","_more", gzipped=True)
-    #print create_new_file("test.txt.gz","_more", gzipped=False)
-    #print create_new_file("~/temp/demo/test","_more")
-    #print create_new_file("~/temp/demo/test.txt","_more")
-    #print create_new_file("~/temp/demo/test.txt.gz","_more")
-    print create_new_file("test","_more","../newfolder")
-    #print create_new_file("test.txt","_more","../newfolder")
-    #print create_new_file("test.txt","_more","../newfolder", gzipped=True)
-    #print create_new_file("test.txt","_more","../newfolder", gzipped=False)
-    #print create_new_file("test.txt.gz","_more","../newfolder")
-    #print create_new_file("~/temp/demo/test","_more","../newfolder")
-    #print create_new_file("~/temp/demo/test.txt","_more","../newfolder")
-    #print create_new_file("~/temp/demo/test.txt.gz","_more","../newfolder")
-   
-    
+    print create_new_file("test.txt", "_more", "../newfolder")
+
+
 if __name__ == '__main__':
     demo_find_files()
     demo_smart_open()
