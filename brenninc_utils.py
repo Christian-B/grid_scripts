@@ -107,7 +107,7 @@ def create_new_file(path, extra, outputdir=None, gzipped=None):
             outputdir = outputdir[:-1]
         result = outputdir + "/" + path[slash_index:dot_index]
     result += extra + path[dot_index:end_pos] + end_bit
-    return result
+    return os.path.expanduser(result)
 
 """
 Returns the handle of a file to write to.

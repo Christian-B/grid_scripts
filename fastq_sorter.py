@@ -2,8 +2,6 @@ import argparse
 import brenninc_utils
 import heapq
 import HTSeq
-import itertools
-import numpy
 import os
 
 _default_qual_scale = "phred"
@@ -93,8 +91,52 @@ class Sorter():
                 wrapper.sequence.write_to_fastq_file(sorted_file)
         print "done"
 
+        for i in range(1, self.batch_number):
+            extra = "_batch" + str(i)
+            new_path = brenninc_utils.create_new_file(self.fastq_file, extra,
+                                                      outputdir=self.outputdir,
+                                                      gzipped=False)
+            os.remove(new_path)
+
+
+def sort(fastq_file, qual_scale=_default_qual_scale, outputdir=None):
+    sorter = Sorter(fastq_file, qual_scale=qual_scale)
+    sorter.sort(outputdir=outputdir)
+
+
+def pathsort(path, outputdir=None, qual_scale=_default_qual_scale):
+    files = brenninc_utils.find_files(path, ["fastq", "fastq.gz"])
+    for afile in files:
+        sort(fastq_file=afile, outputdir=outputdir, qual_scale=qual_scale)
 
 if __name__ == '__main__':
     #sorter = Sorter("example_data/GR1_HY_Trex1_ACAGTG_R1_head100.fastq")
-    sorter = Sorter("example_data/GR1_HY_Trex1_ACAGTG_R1.fastq.gz")
-    sorter.sort()
+    #sorter = Sorter("example_data/GR1_HY_Trex1_ACAGTG_R1.fastq.gz")
+    #sorter.sort()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-o", "--outputdirectory",
+                        help="Path to where output should be written to. "
+                        "If no directpry sorted files written "
+                        "in same directory as input"
+                        "Default is None ",
+                        default=None)
+    parser.add_argument("fastq",
+                        help="Path to fastq file or "
+                        "directory of with fastq files. "
+                        "File specified can have any file exension. "
+                        "For directories only files with '.fastq' or "
+                        "'fastq.gz' "
+                        #"Fasta file '.fasta' or 'fasta.gz' work too.
+                        "will be read. "
+                        "Files ending in '.gz' "
+                        "will automatically be unzipped. ")
+    parser.add_argument("-q", "--qual_scale",
+                        help="Quals scale used for fastq files. "
+                        #"No effect of fasta file. "
+                        "Default is " + _default_qual_scale,
+                        default=_default_qual_scale)
+    args = parser.parse_args()
+    print args
+    pathsort(args.fastq,
+             outputdir=args.outputdirectory,
+             qual_scale=args.qual_scale)
