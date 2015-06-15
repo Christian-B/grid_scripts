@@ -20,6 +20,15 @@ transcriptspath=$2
 #Each can contain replicates comma seperated
 #WARNING the sam in the input files MUST BE SORTED!
 
+mkdir -p $outputdir
+if [ -d "$outputdir" ]; then
+    echo Writing to $outputdir
+else
+    echo unable to create outputdir $outputdir
+    exit -1
+fi
+
+
 samparameter=""
 
 # store arguments in a special array 

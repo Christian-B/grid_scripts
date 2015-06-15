@@ -17,5 +17,13 @@ outputdir=$2
 
 #WARNING the sam in the input file MUST BE SORTED!
 
+mkdir -p $outputdir
+if [ -d "$outputdir" ]; then
+    echo Writing to $outputdir
+else
+    echo unable to create outputdir $outputdir
+    exit -1
+fi
+
 echo cufflinks -o$outputdir $inputpath 
 cufflinks -o$outputdir $inputpath 

@@ -17,5 +17,13 @@ echo module apps/fastqc/0.11.2/noarch loaded
 inputpath=$1
 outputdir=$2
 
+mkdir -p $outputdir
+if [ -d "$outputdir" ]; then
+    echo Writing to $outputdir
+else
+    echo unable to create outputdir $outputdir
+    exit -1
+fi
+
 echo fastqc -outdir=$outputdir $inputpath
 fastqc -outdir=$outputdir $inputpath

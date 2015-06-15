@@ -15,5 +15,13 @@ module load apps/htseq/0.6.1p1/gcc-4.4.7+python-2.7.5+numpy-1.7.1
 inputpath=$1
 outputdir=$2
 
+mkdir -p $outputdir
+if [ -d "$outputdir" ]; then
+    echo Writing to $outputdir
+else
+    echo unable to create outputdir $outputdir
+    exit -1
+fi
+
 echo python fastqsummary.py -d$inputpath -o$outputdir
 python fastqsummary.py -d$inputpath -o$outputdir

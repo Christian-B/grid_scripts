@@ -14,6 +14,14 @@ inputpath=$1
 secondpath=$2
 outputdir=$3
 
+mkdir -p $outputdir
+if [ -d "$outputdir" ]; then
+    echo Writing to $outputdir
+else
+    echo unable to create outputdir $outputdir
+    exit -1
+fi
+
 file_name=${inputpath##*/}
 dotindex=`expr index "$file_name" '.'` 
 base=${file_name:0:$dotindex}

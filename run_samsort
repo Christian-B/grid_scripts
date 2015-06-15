@@ -21,6 +21,14 @@ else
     outputdir=$2/
 fi
 
+mkdir -p $outputdir
+if [ -d "$outputdir" ]; then
+    echo Writing to $outputdir
+else
+    echo unable to create outputdir $outputdir
+    exit -1
+fi
+
 echo using samtools to sort $inputpath to $outputdir
 
 filename=$(basename "$inputpath")
