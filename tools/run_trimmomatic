@@ -1,10 +1,14 @@
 #!/bin/bash
 
+#Script written by christian.brenninkmeijer@manchester.ac.uk.
+
 # -- SGE options (whose lines must begin with #$)
 
 #$ -S /bin/bash       # Our jobscript is written for the bash shell
 #$ -V                 # Inherit environment settings (e.g., from loaded modulefiles)
 #$ -cwd               # Run the job in the current directory
+#$ -pe smp.pe 2       # Example: 2 cores. Can specify 2-16. Do NOT use 1.
+                      # Comment above line out for one core  
 
 module load apps/trimmomatic/0.32/noarch  
 
@@ -36,12 +40,12 @@ extension=${file_name:$dotindex}
 trimmed2=${outputdir}/${base}_trimmed.${extension}
 unpaired2=${outputdir}/${base}_unpaired.${extension}
 
-echo trimmomatic PE -phred33 -threads 2 \
+echo trimmomatic PE -phred33 --threads $NSLOTS \
 $inputpath $secondpath $trimmed1 $unpaired1 $trimmed2 $unpaired2 \
 ILLUMINACLIP:/opt/gridware/pkg/apps/trimmomatic/0.32/noarch/share/adapters/TruSeq3-PE-2.fa:2:30:10 \
 SLIDINGWINDOW:4:20 MINLEN:36 
 
-trimmomatic PE -phred33 -threads 2 \
+trimmomatic PE -phred33 --threads $NSLOTS \
 $inputpath $secondpath $trimmed1 $unpaired1 $trimmed2 $unpaired2 \
 ILLUMINACLIP:/opt/gridware/pkg/apps/trimmomatic/0.32/noarch/share/adapters/TruSeq3-PE-2.fa:2:30:10 \
 SLIDINGWINDOW:4:20 MINLEN:36 
