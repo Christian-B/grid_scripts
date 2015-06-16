@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#Script written by christian.brenninkmeijer@manchester.ac.uk.
+
 # -- SGE options (whose lines must begin with #$)
 
 #$ -S /bin/bash       # Our jobscript is written for the bash shell
