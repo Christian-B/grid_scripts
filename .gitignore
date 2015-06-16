@@ -10,3 +10,6 @@
 #Pythion compiled code
 *.pyc
 
+#Local data folder
+local_data
+
