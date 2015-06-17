@@ -5,8 +5,8 @@ import os
 
 
 def count_single_file(bam_file, handle):
-    print "counting alignments in " + sam_file
-    alignment_iterator = HTSeq.BAM_Reader(bsam_file)
+    print "counting alignments in " + bam_file
+    alignment_iterator = HTSeq.BAM_Reader(bam_file)
     count = 0
     for alignment in alignment_iterator:
         count += 1
@@ -29,7 +29,7 @@ if __name__ == '__main__':
                         default=None)
     parser.add_argument("bam",
                         help="Path to bam file or "
-                        "directory of with sam files. "
+                        "directory of with bam files. "
                         "File specified can have any file exension. "
                         "For directories on files with '.bam' or 'bam.gz' "
                         "will be read. "
