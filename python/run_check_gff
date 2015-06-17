@@ -1,0 +1,23 @@
+#!/bin/bash
+
+#Script written by christian.brenninkmeijer@manchester.ac.uk.
+
+# -- SGE options (whose lines must begin with #$)
+
+#$ -S /bin/bash       # Our jobscript is written for the bash shell
+#$ -V                 # Inherit environment settings (e.g., from loaded modulefiles)
+#$ -N check_gff       # Add a namecd 
+
+#$ -cwd               # Run the job in the current directory
+
+source /etc/profile.d/modules.sh
+module load apps/htseq/0.6.1p1/gcc-4.4.7+python-2.7.5+numpy-1.7.1
+module load apps libs/pysam/0.7.8/gcc-4.4.7+python-2.7.5
+
+#codestart
+
+gff_file=$1
+
+echo python -check_gff.py $gff_file 
+python -m Hcheck_gff.py $gff_file
+
