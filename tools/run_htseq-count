@@ -26,10 +26,18 @@ output_file=$3
 #format=--format=sam
 format=--format=bam
 
+#Select relative name is default
+order=--order=name
+#order=--order=pos
+
 #Select relative yes is default
 #stranded=--stranded=yes       
 stranded=--stranded=reverse   
 #stranded=--stranded=no        
+
+#Select required minimum quality value.
+#Default is 10
+minaqual=--a=10
 
 #Select relative exon is default
 #WARNING: Listed Options may not work for all gff files files CHECK!
@@ -46,5 +54,17 @@ type=--type=gene
 idattr=--idattr=gene_name
 #idattr=--idattr=transcript_type
 
-echo python -m HTSeq.scripts.count $format $stranded $idattr $type $alignment_file $gff_file > $output_file
-python -m HTSeq.scripts.count $format $stranded $idattr $type $alignment_file $gff_file > $output_file
+#Select relative union is default
+mode=--mode=union
+#mode=--mode=intersection-strict
+#mode=--mode=intersection-nonempty
+
+#Set a file as sam out file. Defaul is None
+#samout=--samout=<samout>
+
+echo python -m HTSeq.scripts.count $format $order $minaqual $stranded \
+$idattr $type $mode $samout $alignment_file $gff_file > $output_file
+
+python -m HTSeq.scripts.count $format $order $minaqual $stranded \
+$idattr $type $mode $samout $alignment_file $gff_file > $output_file
+
