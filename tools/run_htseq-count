@@ -1,0 +1,50 @@
+#!/bin/bash
+
+#Script written by christian.brenninkmeijer@manchester.ac.uk.
+
+# -- SGE options (whose lines must begin with #$)
+
+#$ -S /bin/bash       # Our jobscript is written for the bash shell
+#$ -V                 # Inherit environment settings (e.g., from loaded modulefiles)
+#$ -N HTSeq-count     # Add a namecd 
+
+#$ -cwd               # Run the job in the current directory
+
+source /etc/profile.d/modules.sh
+module load apps/htseq/0.6.1p1/gcc-4.4.7+python-2.7.5+numpy-1.7.1
+module load apps libs/pysam/0.7.8/gcc-4.4.7+python-2.7.5
+
+#codestart
+
+alignment_file=$1
+gff_file=$2
+output_file=$3
+
+#Parameters: See http://www-huber.embl.de/users/anders/HTSeq/doc/count.html#count
+
+#Select relative sam is default
+#format=--format=sam
+format=--format=bam
+
+#Select relative yes is default
+#stranded=--stranded=yes       
+stranded=--stranded=reverse   
+#stranded=--stranded=no        
+
+#Select relative exon is default
+#WARNING: Listed Options may not work for all gff files files CHECK!
+#type=--type=exon
+type=--type=gene
+#type=--type=transcript
+#type=--type=CDS
+
+#Select relative gene_id is default
+#WARNING: Listed Options may not work for all gff files files CHECK!
+#idattr=--idattr=gene_id
+#idattr=--idattr=transcript_id
+#idattr=--idattr=gene_type
+idattr=--idattr=gene_name
+#idattr=--idattr=transcript_type
+
+echo python -m HTSeq.scripts.count $format $stranded $idattr $type $alignment_file $gff_file > $output_file
+python -m HTSeq.scripts.count $format $stranded $idattr $type $alignment_file $gff_file > $output_file
