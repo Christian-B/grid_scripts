@@ -18,6 +18,6 @@ module load apps libs/pysam/0.7.8/gcc-4.4.7+python-2.7.5
 
 gff_file=$1
 
-echo python -check_gff.py $gff_file 
-python -m Hcheck_gff.py $gff_file
+echo python check_gff.py $gff_file 
+python check_gff.py $gff_file
 
