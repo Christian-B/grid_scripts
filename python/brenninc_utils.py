@@ -73,7 +73,7 @@ IE the new file is in the same directory as the old one
 """
 
 
-def create_new_file(path, extra, outputdir=None, gzipped=None):
+def create_new_file(path, extra, outputdir=None, extension=None, gzipped=None):
     slash_index = path.rfind("/")
     if slash_index < 0:
         #Try windows divisor
@@ -99,14 +99,21 @@ def create_new_file(path, extra, outputdir=None, gzipped=None):
             end_bit = ".gz"
         else:
             end_bit = ""
-    if outputdir is None:
+    if outputdir is None or len(outputdir.strip()) == 0:
         result = path[:dot_index]
     else:
         if (outputdir.endswith("/") or outputdir.endswith("\\")):
             #remove the slash will add back later just once
             outputdir = outputdir[:-1]
         result = outputdir + "/" + path[slash_index:dot_index]
-    result += extra + path[dot_index:end_pos] + end_bit
+    result += extra
+    if extension is None:
+        result += path[dot_index:end_pos]
+    else:
+        if not extension.startswith("."):
+            extension = "." + extension
+        result += extension    
+    result += end_bit
     return os.path.expanduser(result)
 
 """

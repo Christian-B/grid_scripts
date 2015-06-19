@@ -11,12 +11,20 @@ class create_new_file_tester(unittest.TestCase):
         self.assertEqual(create("test.txt.gz", "_more"), "test_more.txt.gz")
         self.assertEqual(create("test.txt.gz", "_more", gzipped=True),
                          "test_more.txt.gz")
+        self.assertEqual(create("test.txt.gz", "_more", outputdir="", gzipped=True),
+                         "test_more.txt.gz")
+        self.assertEqual(create("test.txt.gz", "_more", extension="csv", gzipped=True),
+                         "test_more.csv.gz")
         self.assertEqual(create("test.txt.gz", "_more", gzipped=False),
                          "test_more.txt")
         self.assertEqual(create("/temp/demo/test", "_more"),
                          "/temp/demo/test_more")
         self.assertEqual(create("/temp/demo/test.txt", "_more"),
                          "/temp/demo/test_more.txt")
+        self.assertEqual(create("/temp/demo/test.txt", "_more", extension="csv"),
+                         "/temp/demo/test_more.csv")
+        self.assertEqual(create("/temp/demo/test.txt", "_more", extension=".csv"),
+                         "/temp/demo/test_more.csv")
         self.assertEqual(create("/temp/demo/test.txt.gz", "_more"),
                          "/temp/demo/test_more.txt.gz")
         self.assertEqual(create("test", "_more", "../newfolder/"),
