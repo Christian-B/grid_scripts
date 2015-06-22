@@ -16,30 +16,43 @@ Else
 
 #If no extensions provided all files are returned
 #Here extensions are assumed to be all lower case
-def find_files(directory, extensions=None):
-    #print "directory",directory
-    if directory.startswith("~"):
-        home = os.path.expanduser("~")
-        directory = home + "/" + directory[1:]
+def find_files(directory, extensions=None, recursive=False, maxfiles=1000):
     files = []
     if os.path.isdir(directory):
-        if extensions is None:
-            for filename in os.listdir(directory):
-                files.append(directory + "/" + filename)
-            if len(files) < 1:
+        files = _search_files(directory, extensions=extensions,
+                              recursive=recursive, maxfiles=maxfiles)
+        if len(files) < 1:
+            if extensions is None:
                 raise Exception("No files found in " + directory)
-        else:
-            for filename in os.listdir(directory):
-                if has_extension(filename, extensions):
-                    files.append(directory + "/" + filename)
-            if len(files) < 1:
+            else:    
                 raise Exception("No files found with extensions " +
-                                extensions + " in " + directory)
-    else:  # assume it is a file
+                                 extensions + " in " + directory)
+    elif os.path.isfile(directory):
         #Accept even if not extected extension
         files.append(directory)
+    else: 
+        raise Exception("Unable to access " + directory)
     return files
 
+
+def _search_files(directory, extensions=None, recursive=False, maxfiles=1000):
+    files = []
+    for filename in os.listdir(directory):
+        newpath = directory + "/" + filename
+        if os.path.isfile(newpath):
+            if extensions is None or has_extension(filename, extensions):
+                files.append(newpath)
+        else:
+            if recursive:
+                files.extend(_search_files(newpath,
+                                           extensions=extensions,
+                                           recursive=recursive,
+                                           maxfiles=maxfiles))
+                if len(files) >1000:                                            
+                    msg = "Found more than " + str(maxFiles) 
+                    msg += " Assuming there are circular links"
+                    raise Exception(msg)                
+    return files
 
 #Here extensions are assumed to be all lower case
 def has_extension(path, extensions):
@@ -52,11 +65,13 @@ def has_extension(path, extensions):
 
 def demo_find_files():
     print "All files"
-    print find_files(os.getcwd(), extensions=None)
+    print sorted(find_files(os.getcwd(), extensions=None, recursive=True))
+    print "All direct files"    
+    print sorted(find_files(os.getcwd(), extensions=None, recursive=False))
     print "python"
-    print find_files(os.getcwd(), extensions=["py"])
+    print sorted(find_files(os.getcwd(), extensions=["py"]))
     print "text and python"
-    print find_files(os.getcwd(), extensions=["txt", ".py"])
+    print sorted(find_files(os.getcwd(), extensions=["txt", ".py"]))
 
 """
 Creates a new file by inserting the extra into the old path.

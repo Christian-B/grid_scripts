@@ -1,4 +1,5 @@
 import brenninc_utils
+import os
 import unittest
 
 
@@ -51,6 +52,42 @@ class create_new_file_tester(unittest.TestCase):
         self.assertEqual(create("~/temp/demo/test.txt.gz", "_more",
                                 "../newfolder"),
                          "../newfolder/test_more.txt.gz")
+
+def check_files_for_ending(file_list, ending):
+    for a_file in file_list:
+        if a_file.endswith(ending):
+            return True
+    return False         
+
+class find_files_tester(unittest.TestCase):
+
+ 
+    def test_all(self):
+        fileList = brenninc_utils.find_files(os.getcwd())
+        found = check_files_for_ending(sorted(fileList), "brenninc_utils_test.py")
+        self.assertTrue(found)
+        
+    def test_txt(self):
+        fileList = brenninc_utils.find_files(os.getcwd(), extensions="txt")
+        found = check_files_for_ending(fileList, "brenninc_utils_test.py")
+        self.assertFalse(found)
+
+    def test_txt_py(self):
+        fileList = brenninc_utils.find_files(os.getcwd(), extensions=["txt", ".py"])
+        found = check_files_for_ending(fileList, "brenninc_utils_test.py")
+        self.assertTrue(found)
+
+    def test_parent(self):
+        parent = os.path.dirname(os.getcwd())
+        fileList = brenninc_utils.find_files(parent)
+        found = check_files_for_ending(fileList, "brenninc_utils_test.py")
+        self.assertFalse(found)
+
+    def test_parent_recursive(self):
+        parent = os.path.dirname(os.getcwd())
+        fileList = brenninc_utils.find_files(parent, recursive=True)
+        found = check_files_for_ending(fileList, "brenninc_utils_test.py")
+        self.assertTrue(found)
 
 if __name__ == '__main__':
     unittest.main()
