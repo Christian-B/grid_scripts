@@ -99,9 +99,9 @@ def open_sam(sam_filename, samtype):
         raise
 
 
-@contextlib.contextmanager
 def get_write_to_samout(samout, pe_mode):
-    samoutfile = None
+
+    samoutfile = samout
 
     def ignore(r, assignment):
         pass
@@ -116,23 +116,19 @@ def get_write_to_samout(samout, pe_mode):
             if read is not None:
                 samoutfile.write(read.original_sam_line.rstrip() +
                                  "\tXF:Z:" + assignment + "\n")
-    try:
-        if samout == "":
-            yield ignore
+    if samout is None:
+        return ignore
+    else:
+        if pe_mode:
+            return paired_write_to_samout
         else:
-            samoutfile = open(samout, "w")
-            if pe_mode:
-                yield paired_write_to_samout
-            else:
-                yield single_write_to_samout
-    finally:
-        if samoutfile is not None:
-            samoutfile.close()
+            return single_write_to_samout
 
 
-class IV_Counter():
+class IVCounter():
 
-    def __init__(self, features, counts, write_to_samout):
+    def __init__(self, features, counts, write_to_samout, direction,
+                 output_stream, output_file):
         self.empty = 0
         self.ambiguous = 0
         self.notaligned = 0
@@ -141,20 +137,25 @@ class IV_Counter():
         self.counts = copy.copy(counts)
         self.features = features
         self.write_to_samout = write_to_samout
+        self.direction = direction
+        self.output_stream = output_stream
+        self.output_file = output_file
 
-    def count(self, iv_seq, read):
-        fs = self._get_fs(iv_seq, read)
-        self._count_fs(fs, read)
+    def not_aligned(self, read):
+        self.notaligned += 1
+        self.write_to_samout(read, "__not_aligned")
 
-    def _get_fs(self, iv_seq, read):
-        fs = set()
-        for iv in iv_seq:
-            if iv.chrom not in self.features.chrom_vectors:
-                self.write_to_samout(read, "__no_feature")
-                self.empty += 1
-            for iv2, fs2 in self.features[iv].steps():
-                fs = fs.union(fs2)
-        return fs
+    def not_unique(self, read):
+        self.nonunique += 1
+        self.write_to_samout(read, "__alignment_not_unique")
+
+    def too_low_quality(self, read):
+        self.lowqual += 1
+        self.write_to_samout(read, "__too_low_aQual")
+
+    #def forward_count(self, iv_seq, read):
+    #def reverse_count(self, iv_seq, read):
+    #def _get_fs(self, iv_seq, read):
 
     def _count_fs(self, fs, read):
         if fs is None or len(fs) == 0:
@@ -167,19 +168,21 @@ class IV_Counter():
             self.write_to_samout(read, list(fs)[0])
             self.counts[list(fs)[0]] += 1
 
-    def results(self, stream):
+    def results(self):
+        print self.direction, "written to", self.output_file
         used_features_count = 0
         used_features_sum = 0
         for fn in sorted(self.counts.keys()):
             if self.counts[fn] > 0:
                 used_features_count += 1
                 used_features_sum += self.counts[fn]
-            stream.write("%s\t%d\n" % (fn, self.counts[fn]))
-        stream.write("__no_feature\t%d\n" % self.empty)
-        stream.write("__ambiguous\t%d\n" % self.ambiguous)
-        stream.write("__too_low_aQual\t%d\n" % self.lowqual)
-        stream.write("__not_aligned\t%d\n" % self.notaligned)
-        stream.write("__alignment_not_unique\t%d\n" % self.nonunique)
+            self.output_stream.write("%s\t%d\n" % (fn, self.counts[fn]))
+        self.output_stream.write("__no_feature\t%d\n" % self.empty)
+        self.output_stream.write("__ambiguous\t%d\n" % self.ambiguous)
+        self.output_stream.write("__too_low_aQual\t%d\n" % self.lowqual)
+        self.output_stream.write("__not_aligned\t%d\n" % self.notaligned)
+        self.output_stream.write("__alignment_not_unique\t%d\n" %
+                                 self.nonunique)
         print "__no_feature\t%d" % self.empty
         print "__ambiguous\t%d" % self.ambiguous
         print "__too_low_aQual\t%d" % self.lowqual
@@ -189,7 +192,69 @@ class IV_Counter():
         print "alignments asigned to feature\t%d" % used_features_sum
 
 
-class IV_Counter_Strict(IV_Counter):
+class ForwardIVCounter(IVCounter):
+
+    def forward_count(self, iv_seq, read):
+        fs = self._get_fs(iv_seq, read)
+        self._count_fs(fs, read)
+
+    def reverse_count(self, iv_seq, read):
+        pass
+
+
+class ReverseIVCounter(IVCounter):
+
+    def forward_count(self, iv_seq, read):
+        pass
+
+    def reverse_count(self, iv_seq, read):
+        fs = self._get_fs(iv_seq, read)
+        self._count_fs(fs, read)
+
+
+class BothIVCounter():
+
+    def __init__(self, forward, reverse):
+        self.forward = forward
+        self.reverse = reverse
+
+    def not_aligned(self, read):
+        self.forward.not_aligned(read)
+        self.reverse.not_aligned(read)
+
+    def not_unique(self, read):
+        self.forward.not_unique(read)
+        self.reverse.not_unique(read)
+
+    def too_low_quality(self, read):
+        self.forward.too_low_quality(read)
+        self.reverse.too_low_quality(read)
+
+    def forward_count(self, iv_seq, read):
+        self.forward.forward_count(iv_seq, read)
+
+    def reverse_count(self, iv_seq, read):
+        self.reverse.reverse_count(iv_seq, read)
+
+    def results(self):
+        self.forward.results()
+        self.reverse.results()
+
+
+class FSUnion():
+
+    def _get_fs(self, iv_seq, read):
+        fs = set()
+        for iv in iv_seq:
+            if iv.chrom not in self.features.chrom_vectors:
+                self.write_to_samout(read, "__no_feature")
+                self.empty += 1
+            for iv2, fs2 in self.features[iv].steps():
+                fs = fs.union(fs2)
+        return fs
+
+
+class FSStrict():
     def _get_fs(self, iv_seq, read):
         fs = None
         for iv in iv_seq:
@@ -204,7 +269,7 @@ class IV_Counter_Strict(IV_Counter):
         return fs
 
 
-class IV_Counter_Nonempty(IV_Counter):
+class FSNonempty():
     def _get_fs(self, iv_seq, read):
         fs = None
         for iv in iv_seq:
@@ -220,65 +285,133 @@ class IV_Counter_Nonempty(IV_Counter):
         return fs
 
 
-def iv_counter_factory(features, counts, write_to_samout, mode):
-    if mode == "union":
-        return IV_Counter(features, counts, write_to_samout)
-    if mode == "intersection-strict":
-        return IV_Counter_Strict(features, counts, write_to_samout)
-    if mode == "intersection-nonempty":
-        return IV_Counter_Nonempty(features, counts, write_to_samout)
-    sys.exit("Illegal overlap mode.")
+class ForwardUnionCounter(ForwardIVCounter, FSUnion):
+    pass
 
 
-def count_reads_single(read_seq, forward_counter, reverse_counter, order,
-                       quiet, minaqual, write_to_samout):
+class ForwardStrictCounter(ForwardIVCounter, FSStrict):
+    pass
 
+
+class ForwardNonemptyCounter(ForwardIVCounter, FSNonempty):
+    pass
+
+
+class ReverseUnionCounter(ReverseIVCounter, FSUnion):
+    pass
+
+
+class ReverseStrictCounter(ReverseIVCounter, FSStrict):
+    pass
+
+
+class ReverseNonemptyCounter(ReverseIVCounter, FSNonempty):
+    pass
+
+
+@contextlib.contextmanager
+def iv_counter_factory(features, counts, mode, stranded,
+                       forward_output_file, reverse_output_file,
+                       forward_samout, reverse_samout, pe_mode):
+    forward_sam_file = None
+    reverse_sam_file = None
+    forward_output_stream = None
+    reverse_output_stream = None
+    try:
+        if stranded in ["yes", "no", "both"]:
+            if forward_samout != "":
+                forward_sam_file = open(forward_samout, "w")
+            write_to_samout = get_write_to_samout(forward_sam_file, pe_mode)
+            forward_output_stream = open(forward_output_file, "w")
+            if mode == "union":
+                forward = ForwardUnionCounter(features, counts,
+                                              write_to_samout, "forward",
+                                              forward_output_stream,
+                                              forward_output_file)
+            elif mode == "intersection-strict":
+                forward = ForwardStrictCounter(features, counts,
+                                               write_to_samout, "forward",
+                                               forward_output_stream,
+                                               forward_output_file)
+            elif mode == "intersection-nonempty":
+                forward = ForwardNonemptyCounter(features, counts,
+                                                 write_to_samout, "forward",
+                                                 forward_output_stream,
+                                                 forward_output_file)
+            else:
+                sys.exit("Illegal overlap mode: " + mode)
+        if stranded in ["reverse", "both"]:
+            if reverse_samout != "":
+                reverse_sam_file = open(reverse_samout, "w")
+            write_to_samout = get_write_to_samout(reverse_sam_file, pe_mode)
+            reverse_output_stream = open(reverse_output_file, "w")
+            if mode == "union":
+                reverse = ReverseUnionCounter(features, counts,
+                                              write_to_samout, "reverse",
+                                              reverse_output_stream,
+                                              reverse_output_file)
+            elif mode == "intersection-strict":
+                reverse = ReverseStrictCounter(features, counts,
+                                               write_to_samout, "reverse",
+                                               reverse_output_stream,
+                                               reverse_output_file)
+            elif mode == "intersection-nonempty":
+                reverse = ReverseNonemptyCounter(features, counts,
+                                                 write_to_samout, "reverse",
+                                                 reverse_output_stream,
+                                                 reverse_output_file)
+            else:
+                sys.exit("Illegal overlap mode: " + mode)
+        if stranded in ["yes", "no"]:
+            yield forward
+        elif stranded == "reverse":
+            yield reverse
+        elif stranded == "both":
+            yield BothIVCounter(forward, reverse)
+        else:
+            sys.exit("Illegal stranded: " + stranded)
+    finally:
+        if forward_sam_file is not None:
+            forward_sam_file.close()
+        if reverse_sam_file is not None:
+            reverse_sam_file.close()
+        if forward_output_stream is not None:
+            forward_output_stream.close()
+        if reverse_output_stream is not None:
+            reverse_output_stream.close()
+
+
+def count_reads_single(read_seq, counter, quiet, minaqual):
     i = 0
     for r in read_seq:
         if i > 0 and i % 100000 == 0 and not quiet:
             sys.stderr.write("%d SAM alignment records processed.\n" % (i))
-
         i += 1
         if not r.aligned:
-            if forward_counter is not None:
-                forward_counter.notaligned += 1
-            if reverse_counter is not None:
-                reverse_counter.notaligned += 1
-            write_to_samout(r, "__not_aligned")
+            counter.not_aligned(r)
             continue
         try:
             if r.optional_field("NH") > 1:
-                if forward_counter is not None:
-                    forward_counter.nonunique += 1
-                if reverse_counter is not None:
-                    reverse_counter.nonunique += 1
-                write_to_samout(r, "__alignment_not_unique")
+                counter.not_unique(r)
                 continue
         except KeyError:
             pass
         if r.aQual < minaqual:
-            if forward_counter is not None:
-                forward_counter.lowqual += 1
-            if reverse_counter is not None:
-                reverse_counter.lowqual += 1
-            write_to_samout(r, "__too_low_aQual")
+            counter.too_low_quality(r)
             continue
 
-        if forward_counter is not None:
-            iv_seq = (co.ref_iv for co in r.cigar
-                      if co.type == "M" and co.size > 0)
-            forward_counter.count(iv_seq, r)
-        if reverse_counter is not None:
-            iv_seq = (invert_strand(co.ref_iv)
-                      for co in r.cigar if co.type == "M" and co.size > 0)
-            reverse_counter.count(iv_seq, r)
+        iv_seq = (co.ref_iv for co in r.cigar
+                  if co.type == "M" and co.size > 0)
+        counter.forward_count(iv_seq, r)
+        iv_seq = (invert_strand(co.ref_iv) for co in r.cigar
+                  if co.type == "M" and co.size > 0)
+        counter.reverse_count(iv_seq, r)
 
     if not quiet:
         sys.stderr.write("%d SAM alignments processed.\n" % (i))
 
 
-def count_reads_paired(read_seq, forward_counter, reverse_counter, order,
-                       quiet, minaqual, write_to_samout):
+def count_reads_paired(read_seq, counter, order, quiet, minaqual):
 
     if order == "name":
         read_seq = HTSeq.pair_SAM_alignments(read_seq)
@@ -295,64 +428,44 @@ def count_reads_paired(read_seq, forward_counter, reverse_counter, order,
 
         i += 1
         if r[0] is not None and r[0].aligned:
-            if forward_counter is not None:
-                forward_iv_seq = (co.ref_iv
-                                  for co in r[0].cigar
-                                  if co.type == "M" and co.size > 0)
-            if reverse_counter is not None:
-                reverse_iv_seq = (invert_strand(co.ref_iv)
-                                  for co in r[0].cigar
-                                  if co.type == "M" and co.size > 0)
+            forward_iv_seq = (co.ref_iv for co in r[0].cigar
+                              if co.type == "M" and co.size > 0)
+            reverse_iv_seq = (invert_strand(co.ref_iv) for co in r[0].cigar
+                              if co.type == "M" and co.size > 0)
         else:
             forward_iv_seq = tuple()
             reverse_iv_seq = tuple()
         if r[1] is not None and r[1].aligned:
-            if forward_counter is not None:
-                rest = (invert_strand(co.ref_iv) for co in r[1].cigar
-                        if co.type == "M" and co.size > 0)
-                forward_iv_seq = itertools.chain(forward_iv_seq, rest)
-            if reverse_counter is not None:
-                rest = (co.ref_iv for co in r[1].cigar
-                        if co.type == "M" and co.size > 0)
-                reverse_iv_seq = itertools.chain(reverse_iv_seq, rest)
+            rest = (invert_strand(co.ref_iv) for co in r[1].cigar
+                    if co.type == "M" and co.size > 0)
+            forward_iv_seq = itertools.chain(forward_iv_seq, rest)
+            rest = (co.ref_iv for co in r[1].cigar
+                    if co.type == "M" and co.size > 0)
+            reverse_iv_seq = itertools.chain(reverse_iv_seq, rest)
         else:
             if (r[0] is None) or not (r[0].aligned):
-                write_to_samout(r, "__not_aligned")
-                if forward_counter is not None:
-                    forward_counter.notaligned += 1
-                if reverse_counter is not None:
-                    reverse_counter.notaligned += 1
+                counter.not_aligned(r)
                 continue
         try:
             if (r[0] is not None and r[0].optional_field("NH") > 1) or \
                     (r[1] is not None and r[1].optional_field("NH") > 1):
-                if forward_counter is not None:
-                    forward_counter.nonunique += 1
-                if reverse_counter is not None:
-                    reverse_counter.nonunique += 1
-                write_to_samout(r, "__alignment_not_unique")
+                counter.non_unique(r)
                 continue
         except KeyError:
             pass
         if (r[0] and r[0].aQual < minaqual) or \
                 (r[1] and r[1].aQual < minaqual):
-            if forward_counter is not None:
-                forward_counter.lowqual += 1
-            if reverse_counter is not None:
-                reverse_counter.lowqual += 1
-            write_to_samout(r, "__too_low_aQual")
+            counter.too_low_quality(r)
             continue
 
-        if forward_counter is not None:
-            forward_counter.count(forward_iv_seq, r)
-        if reverse_counter is not None:
-            reverse_counter.count(reverse_iv_seq, r)
+        counter.forward_count(forward_iv_seq, r)
+        counter.reverse_count(reverse_iv_seq, r)
 
     if not quiet:
         sys.stderr.write("%d SAM alignment pairs processed.\n" % (i))
 
 
-def detect_sam_type(filename, samtype):
+def detect_sam_type(filename):
     if filename.endswith(".bam"):
         return "bam"
     if filename.endswith(".sam"):
@@ -375,44 +488,48 @@ def write_output(counter, original_filename, direction, directory):
         counter.results(output_file)
 
 
+def count_reads_using_files(sam_filename, features, counts, samtype, order,
+                            stranded, overlap_mode, quiet, minaqual,
+                            forward_output, reverse_output,
+                            forward_samout, reverse_samout):
+    with open_sam(sam_filename, samtype) as (pe_mode, read_seq):
+        with iv_counter_factory(features, counts, overlap_mode, stranded,
+                                forward_output, reverse_output,
+                                forward_samout, reverse_samout,
+                                pe_mode) as counter:
+            if pe_mode:
+                count_reads_paired(read_seq, counter, order, quiet, minaqual)
+            else:
+                count_reads_single(read_seq, counter, quiet, minaqual)
+            counter.results()
+
+
 def count_reads_using_features(sam_filename, features, counts, samtype, order,
                                stranded, overlap_mode, quiet, minaqual,
                                samout, directory):
     if samtype is None:
-        samtype = detect_sam_type(sam_filename, samtype)
+        samtype = detect_sam_type(sam_filename)
     create = brenninc_utils.create_new_file
-    with open_sam(sam_filename, samtype) as (pe_mode, read_seq):
-        with get_write_to_samout(samout, pe_mode) as write_to_samout:
-            if stranded in ["yes", "no", "both"]:
-                if samout == "auto":
-                    samout = create(sam_filename, "_forward_annotated",
-                                    outputdir=directory, extension="sam",
-                                    gzipped=False)
-                forward_counter = iv_counter_factory(features,
-                                                     counts,
-                                                     write_to_samout,
-                                                     overlap_mode)
-            else:
-                forward_counter = None
-            if stranded in ["reverse", "both"]:
-                if samout == "auto":
-                    samout = create(sam_filename, "_reverse_annotated",
-                                    outputdir=directory, extension="sam",
-                                    gzipped=False)
-                reverse_counter = iv_counter_factory(features,
-                                                     counts,
-                                                     write_to_samout,
-                                                     overlap_mode)
-            else:
-                reverse_counter = None
-            if pe_mode:
-                count_reads_paired(read_seq, forward_counter, reverse_counter,
-                                   order, quiet, minaqual, write_to_samout)
-            else:
-                count_reads_single(read_seq, forward_counter, reverse_counter,
-                                   order, quiet, minaqual, write_to_samout)
-            write_output(forward_counter, sam_filename, "forward", directory)
-            write_output(reverse_counter, sam_filename, "reverse", directory)
+    forward_output = create(sam_filename, "_forward_count",
+                            outputdir=directory, extension="txt",
+                            gzipped=False)
+    reverse_output = create(sam_filename, "_reverse_count",
+                            outputdir=directory, extension="txt",
+                            gzipped=False)
+    if samout == "auto":
+        forward_samout = create(sam_filename, "_forward_annotated",
+                                outputdir=directory, extension="sam",
+                                gzipped=False)
+        reverse_samout = create(sam_filename, "_reverse_annotated",
+                                outputdir=directory, extension="sam",
+                                gzipped=False)
+    else:
+        forward_samout = samout
+        reverse_samout = samout
+    count_reads_using_files(sam_filename, features, counts, samtype, order,
+                            stranded, overlap_mode, quiet, minaqual,
+                            forward_output, reverse_output,
+                            forward_samout, reverse_samout)
 
 
 def count_reads_in_features(sam_filename, gff_filename, samtype, order,
