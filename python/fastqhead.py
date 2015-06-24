@@ -2,29 +2,29 @@ import argparse
 import brenninc_utils
 import HTSeq
 import itertools
-import numpy
-import os
 
 _default_qual_scale = "phred"
 
+
 def head(path, sequences=100,  outputdir=None,
          qual_scale=_default_qual_scale):
-    extra = "_head" + str(sequences)     
+    extra = "_head" + str(sequences)
     new_path = brenninc_utils.create_new_file(path, extra, outputdir=outputdir,
                                               gzipped=False)
     fastq_iterator = HTSeq.FastqReader(path, qual_scale)
     with open(new_path, 'w') as headFile:
-        for sequence in itertools.islice( fastq_iterator, sequences):
+        for sequence in itertools.islice(fastq_iterator, sequences):
             sequence.write_to_fastq_file(headFile)
-            
+
+
 def makehead(path, sequences=100, outputdir=None,
              qual_scale=_default_qual_scale):
-     files =  brenninc_utils.find_files(path, ["fastq","fastq.gz"])
-     for afile in files:
+    files = brenninc_utils.find_files(path, ["fastq", "fastq.gz"])
+    for afile in files:
         head(path=afile, sequences=sequences, outputdir=outputdir,
              qual_scale=qual_scale)
-     
-            
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-o", "--outputdirectory",
@@ -37,9 +37,8 @@ if __name__ == '__main__':
                         help="Path to fastq file or "
                         "directory of with fastq files. "
                         "File specified can have any file exension. "
-                        "For directories only files with '.fastq' or 'fastq.gz' "
-                        #"Fasta file '.fasta' or 'fasta.gz' work too.
-                        "will be read. "
+                        "For directories only files with "
+                        "'.fastq' or 'fastq.gz' will be read. "
                         "Files ending in '.gz' "
                         "will automatically be unzipped. ")
     parser.add_argument("-s", "--sequences",
@@ -54,7 +53,6 @@ if __name__ == '__main__':
                         default=_default_qual_scale)
     args = parser.parse_args()
     print args
-    makehead(args.fastq, sequences=args.sequences, 
+    makehead(args.fastq, sequences=args.sequences,
              outputdir=args.outputdirectory,
              qual_scale=args.qual_scale)
-
