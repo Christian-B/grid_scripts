@@ -173,23 +173,23 @@ class IVCounter():
         used_features_count = 0
         used_features_sum = 0
         for fn in sorted(self.counts.keys()):
-            if self.counts[fn] > 0:
-                used_features_count += 1
-                used_features_sum += self.counts[fn]
-            self.output_stream.write("%s\t%d\n" % (fn, self.counts[fn]))
-        self.output_stream.write("__no_feature\t%d\n" % self.empty)
-        self.output_stream.write("__ambiguous\t%d\n" % self.ambiguous)
-        self.output_stream.write("__too_low_aQual\t%d\n" % self.lowqual)
-        self.output_stream.write("__not_aligned\t%d\n" % self.notaligned)
-        self.output_stream.write("__alignment_not_unique\t%d\n" %
-                                 self.nonunique)
+            #if self.counts[fn] > 0:
+            #    used_features_count += 1
+            #    used_features_sum += self.counts[fn]
+            print("%s\t%d" % (fn, self.counts[fn]))
+            #self.output_stream.write("%s\t%d\n" % (fn, self.counts[fn]))
+        #self.output_stream.write("__no_feature\t%d\n" % self.empty)
+        #self.output_stream.write("__ambiguous\t%d\n" % self.ambiguous)
+        #self.output_stream.write("__too_low_aQual\t%d\n" % self.lowqual)
+        #self.output_stream.write("__not_aligned\t%d\n" % self.notaligned)
+        #self.output_stream.write("__alignment_not_unique\t%d\n" %
         print "__no_feature\t%d" % self.empty
         print "__ambiguous\t%d" % self.ambiguous
         print "__too_low_aQual\t%d" % self.lowqual
         print "__not_aligned\t%d" % self.notaligned
         print "__alignment_not_unique\t%d" % self.nonunique
-        print "features with alignment\t%d" % used_features_count
-        print "alignments asigned to feature\t%d" % used_features_sum
+        #print "features with alignment\t%d" % used_features_count
+        #print "alignments asigned to feature\t%d" % used_features_sum
 
 
 class ForwardIVCounter(IVCounter):

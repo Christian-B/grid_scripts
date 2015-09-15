@@ -1,0 +1,76 @@
+#!/bin/bash
+
+#Script written by christian.brenninkmeijer@manchester.ac.uk.
+
+# -- SGE options (whose lines must begin with #$)
+
+#$ -S /bin/bash       # Our jobscript is written for the bash shell
+#$ -V                 # Inherit environment settings (e.g., from loaded modulefiles)
+#$ -N fastqsummary  # Add a name
+
+#$ -cwd               # Run the job in the current directory
+
+module load apps/htseq/0.6.1p1/gcc-4.4.7+python-2.7.5+numpy-1.7.1
+
+#codestart
+
+#May be a directory which will be search recursively
+alignment_path=$1
+output_directory=$2
+gff_file=$3 #could be hard coded here
+
+#Select relative 
+#comment out all to auto detect type or search for both
+#format=--format=sam
+format=--format=bam
+
+#Select relative name is default
+order=--order=name
+#order=--order=pos
+
+#Select relative yes is default
+#stranded=--stranded=yes       
+#stranded=--stranded=reverse   
+#stranded=--stranded=no        
+stranded=--stranded=both
+
+#Select required minimum quality value.
+#Default is 10
+minaqual=--a=10
+
+#Select relative exon is default
+#WARNING: Listed Options may not work for all gff files files CHECK!
+#type=--type=exon
+type=--type=gene
+#type=--type=transcript
+#type=--type=CDS
+
+#Select relative gene_id is default
+#WARNING: Listed Options may not work for all gff files files CHECK!
+#idattr=--idattr=gene_id
+#idattr=--idattr=transcript_id
+#idattr=--idattr=gene_type
+idattr=--idattr=gene_name
+#idattr=--idattr=transcript_type
+
+#Select relative union is default
+mode=--mode=union
+#mode=--mode=intersection-strict
+#mode=--mode=intersection-nonempty
+
+#Set a file as sam out file. Defaul is None
+#samout=--samout=<samout>
+#This one will automatically create the required output files
+#samout=--samout=auto
+
+#Set directory to write all output too
+#Require that name of each input file in unique!
+#Default is write output in same directory as input
+directory = --directory=output_directory
+
+echo python batch_htseq_count.py $format $order $minaqual $stranded \
+$idattr $type $mode $samout $directory $alignment_path $gff_file 
+
+python batch_htseq_count.py $format $order $minaqual $stranded \
+$idattr $type $mode $samout $directory $alignment_path $gff_file 
+
