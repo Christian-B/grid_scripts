@@ -174,7 +174,7 @@ def do_walk(source=os.getcwd(), directory_action=approve_all, file_action=print_
     source = expanderuser(source)
     #Must be topdown=True otherwise walk will process subdirectories before checking them
     for root, dirs, files in os.walk(source, topdown=True, onerror=onerror, followlinks=followlinks):
-        print root, len(dirs), len(files)
+        dirs = sorted(dirs)
         dirs_clone = dirs[:]
         for sub in dirs_clone:
             if not directory_action(root, sub, verbose=verbose):
@@ -184,18 +184,6 @@ def do_walk(source=os.getcwd(), directory_action=approve_all, file_action=print_
         # do something cool with each file    
         for name in files:
             file_action(root, name, verbose=verbose)
-
-
-def demo():
-    source = "/mnt/fls01-bcf01/ngsdata/Analysis/2015/hiseq/150821_SN700511R_0296_AC7M2RACXX_analysis/Tovah_Shaw/fastqs/"
-    target = "/mnt/mr01-home01/mbaxecb2/scratch/workflow"
-    directory_checker = RegexChecker(["^M"])
-    #ls -alcopier = Copier({".py$":"code.py"},"~/temp")
-    copier = Linker({"R1_001.fast":"left.link", "R2_001.fast":"right.link"},target)
-    do_walk(source=source, directory_action=approve_all, file_action=copier.file_action, verbose=True)
-    
-    lister = DirectoryLister(list_file="thelist.txt",required_files=["left.link","right.link"]) #, check_path="~/temp", list_path="/Junk")
-    do_walk(source="~/temp/william_data", directory_action=lister.list_directory, file_action=approve_none, verbose=True)
 
 
 def count_lines(file_name):
