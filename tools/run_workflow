@@ -105,7 +105,7 @@ idattr=--idattr=gene_id
 #idattr=--idattr=gene_name
 #idattr=--idattr=transcript_type
 
-run_command="python -m count $format $stranded $idattr $type Aligned.out.bam $gff_file"
+run_command="python -m HTSeq.scripts.count $format $stranded $idattr $type Aligned.out.bam $gff_file"
 echo running $run_command to htseq.output
 
 $run_command > htseq.output
