@@ -635,7 +635,6 @@ if __name__ == '__main__':
                        "Will look in all files in the directories specified by parent that are in the file_list."
                        "For each line with this delimiter it will not the rest in a summary file."
                        "This data will be written to a tsv file in the parent directory.")
-    batch_group.option_list.append(list_option)
     batch_group.option_list.append(outout_option)
     parser.add_option_group(batch_group)
 
