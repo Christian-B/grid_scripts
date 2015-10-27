@@ -3,10 +3,15 @@ python batch_tools.py find --source="/mnt/fls01-bcf01/ngsdata/Analysis/2015/hise
 python batch_tools.py find --source="/mnt/fls01-bcf01/ngsdata/Analysis/2015/hiseq/150923_SN700511R_0297_AC7T4RACXX_analysis/undetermined/fastqs" --parent="/mnt/mr01-home01/mbaxecb2/scratch/mydata" --file_list="_Undetermined_L00[0-9]_R1_001.fastq.gz:left.link" --file_list="_Undetermined_L00[0-9]_R2_001.fastq.gz:right.link" 
 
 
-python batch_tools.py list --parent="/mnt/mr01-home01/mbaxecb2/scratch/mydata" --file_list="R1_001.fastq.gz:left.link" --file_list="R2_001.fastq.gz:right.link" --list="directories.txt" --output_dir="/mnt/mr01-home01/mbaxecb2/scratch/mydata" 
-
-
+python batch_tools.py list --parent="/mnt/mr01-home01/mbaxecb2/scratch/mydata" --file_list="_Undetermined_L00[0-9]_R1_001.fastq.gz:left.link" --file_list="_Undetermined_L00[0-9]_R2_001.fastq.gz:right.link" --list="directories.txt" --output_dir="/mnt/mr01-home01/mbaxecb2/scratch/mydata" 
 
 python batch_tools.py list --parent="/mnt/mr01-home01/mbaxecb2/scratch/mydata" --file_list="left.link" --file_list="right.link" --list="/mnt/mr01-home01/mbaxecb2/scratch/mydata/directories.txt"  
 
+
+
+python batch_tools.py batch --list="/mnt/mr01-home01/mbaxecb2/scratch/mydata/directories.txt" --qsub_script="/mnt/mr01-home01/mbaxecb2/code/tools/run_trimmomatic_star_htseq_workflow" --batch_script="/mnt/mr01-home01/mbaxecb2/scratch/mydata/run_trimmomatic_star_htseq_workflow_batch"
+
+
+
+python batch_tools.py find list batch --source="/mnt/fls01-bcf01/ngsdata/Analysis/2015/hiseq/150923_SN700511R_0297_AC7T4RACXX_analysis/undetermined/fastqs" --parent="/mnt/mr01-home01/mbaxecb2/scratch/mydata" --file_list="_Undetermined_L00[0-9]_R1_001.fastq.gz:left.link" --file_list="_Undetermined_L00[0-9]_R2_001.fastq.gz:right.link" --list="/mnt/mr01-home01/mbaxecb2/scratch/mydata/directories.txt" --qsub_script="/mnt/mr01-home01/mbaxecb2/code/tools/run_trimmomatic_star_htseq_workflow" --batch_script="/mnt/mr01-home01/mbaxecb2/scratch/mydata/run_trimmomatic_star_htseq_workflow_batch"
 
