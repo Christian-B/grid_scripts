@@ -28,4 +28,4 @@ python batch_tools.py delimit --parent="/mnt/mr01-home01/mbaxecb2/scratch/temp" 
 
 
 
-python  batch_tools.py merge --parent="/mnt/mr01-home01/mbaxecb2/scratch/temp" --file_list="htseq.tsv:htseq.output" --delimiter="|" --output_dir="/mnt/mr01-home01/mbaxecb2/scratch/mydata"
+python  batch_tools.py merge --parent="/mnt/mr01-home01/mbaxecb2/scratch/temp" --file_list="htseq.tsv:htseq.output" --output_dir="/mnt/mr01-home01/mbaxecb2/scratch/mydata"
