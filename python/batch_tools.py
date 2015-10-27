@@ -546,7 +546,9 @@ if __name__ == '__main__':
                     "looking for file that match the pattern in " + __FILE_LIST__ + "(s)."
                     "For each directory with one or more files found.  "
                     "A subdirectory of " + __PARENT__ + " is created/used "
-                    "A new file is created with either a link or copy. ")
+                    "A new file is created with either a link or copy. "
+                    'Example: find --file_list="R1_001.fastq.gz:left.link" --file_list="R2_001.fastq.gz:right.link" '
+                    )
     find_group.add_option(short(__SOURCE__), longer(__SOURCE__) , dest=__SOURCE__, action="store", type="string",
                   default=os.getcwd(),
                   help=__SOURCE__ + "directory that holds the raw data files. "
@@ -572,13 +574,15 @@ if __name__ == '__main__':
                      "Lists all the paths to the directories "
                      "(including subdirectories) in " + __PARENT__ + " directory"
                      "But only includes the directories that contain a  files in " + __FILE_LIST__ + "(s)"
-                     "This list is writen to the path specified as " + __LISTp__)
+                     "This list is writen to the path specified as " + __LISTp__ + "  "
+                     'Example: list --file_list="left.link" --file_list="right.link"'
+                     )
     list_group.option_list.append(parent_option)
     list_group.option_list.append(file_list_option)
     list_group.add_option(short(__LISTp__), longer(__LISTp__), dest=__LISTp__, action="store", type="string",
                   default="directories.txt",
                   help="File to hold the list of directories. "
-                  "Default is directories.txt"
+                  "Default is directories.txt "
                   "If " + __LISTp__ + " is a relative path it is relative to " + __OUTPUT_DIR__ )
     list_group.add_option(short(__OUTPUT_DIR__), longer(__OUTPUT_DIR__), dest=__OUTPUT_DIR__, action="store", type="string",
                   help="Directories to hold the file(s). "
