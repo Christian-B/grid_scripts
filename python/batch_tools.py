@@ -1,3 +1,6 @@
+#This version is now depricated
+#Please download the new version from https://github.com/Christian-B/batch_tool
+
 import collections
 import filecmp
 import optparse  # using optparse as hydra still python 2.6
@@ -535,7 +538,9 @@ __VERBOSE__ = "VERBOSE"
 
 
 if __name__ == '__main__':
-    usage = "usage: %prog command(s) [options] \n" + \
+    usage = "This version is now depricated. \n" + \
+            "Please download the new version from https://github.com/Christian-B/batch_tool. \n" + \
+            "usage: %prog command(s) [options] \n" + \
             "Where command(s) is one or more of " + str(__COMMANDS__)
     parser = optparse.OptionParser(usage=usage)
     parser.add_option(short(__VERBOSE__ ), longer(__VERBOSE__ ), action="store_true", dest=__VERBOSE__, default=False,
